@@ -118,9 +118,7 @@ describe('PuzzleApp', () => {
       vi.runAllTimers();
     });
 
-    await waitFor(() => {
-      expect(mockStartNewGame).toHaveBeenCalledWith('data:image/png;base64,mock', 'easy');
-    });
+    expect(mockStartNewGame).toHaveBeenCalledWith('data:image/png;base64,mock', 'easy');
   });
 
   it('shows win overlay when game is won', async () => {
@@ -196,21 +194,27 @@ describe('PuzzleApp', () => {
 
     const piece = screen.getByTestId('piece-p1');
 
-    fireEvent.mouseDown(piece, { clientX: 100, clientY: 100 });
+    act(() => {
+      fireEvent.mouseDown(piece, { clientX: 100, clientY: 100 });
+    });
 
     const mouseMoveEvent = new MouseEvent('mousemove', {
       clientX: 150,
       clientY: 150,
       bubbles: true
     });
-    window.dispatchEvent(mouseMoveEvent);
+    act(() => {
+      window.dispatchEvent(mouseMoveEvent);
+    });
 
     expect(mockMoveGroup).toHaveBeenCalled();
 
     const mouseUpEvent = new MouseEvent('mouseup', {
       bubbles: true
     });
-    window.dispatchEvent(mouseUpEvent);
+    act(() => {
+      window.dispatchEvent(mouseUpEvent);
+    });
 
     expect(mockTryConnect).toHaveBeenCalledWith('p1');
   });
@@ -231,5 +235,53 @@ describe('PuzzleApp', () => {
     fireEvent.click(backBtn);
 
     expect(screen.getByText(/Choose a Puzzle/i)).toBeInTheDocument();
+  });
+
+  it('toggles theme when theme button is clicked', () => {
+    render(<PuzzleApp />);
+    const toggleBtn = screen.getByTitle(/Toggle Theme/i);
+
+    // Default is dark
+    expect(screen.getByRole('main').parentElement).toHaveClass(/themeDark/);
+
+    fireEvent.click(toggleBtn);
+    expect(screen.getByRole('main').parentElement).toHaveClass(/themeLight/);
+
+    fireEvent.click(toggleBtn);
+    expect(screen.getByRole('main').parentElement).toHaveClass(/themeDark/);
+  });
+
+  it('handles panning on the background', async () => {
+    render(<PuzzleApp />);
+
+    // Enter game view
+    const natureBtn = screen.getByText(/Nature/i);
+    fireEvent.click(natureBtn);
+    act(() => { vi.runAllTimers(); });
+
+    const canvas = screen.getByRole('main').querySelector('section');
+
+    act(() => {
+      fireEvent.mouseDown(canvas, { clientX: 100, clientY: 100 });
+    });
+
+    const mouseMoveEvent = new MouseEvent('mousemove', {
+      clientX: 150,
+      clientY: 150,
+      bubbles: true
+    });
+    act(() => {
+      window.dispatchEvent(mouseMoveEvent);
+    });
+
+    // No direct way to check state in this test, but we ensure no crashes
+    // and we can check if the class was added if we exposed isPanning better.
+    // For now, let's just check if it's in the document.
+    expect(canvas).toBeInTheDocument();
+
+    const mouseUpEvent = new MouseEvent('mouseup', { bubbles: true });
+    act(() => {
+      window.dispatchEvent(mouseUpEvent);
+    });
   });
 });

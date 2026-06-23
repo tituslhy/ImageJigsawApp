@@ -6,20 +6,34 @@
 
 /* ── Design tokens ──────────────────────────────────────────── */
 :root {
-  --bg:           #1a1a2e;
-  --board:        #16213e;
   --accent:       #e94560;
   --accent-glow:  rgba(233, 69, 96, 0.45);
   --accent-dim:   rgba(233, 69, 96, 0.15);
-  --text:         #ffffff;
-  --text-muted:   #8892b0;
-  --surface:      rgba(255, 255, 255, 0.04);
-  --border:       rgba(255, 255, 255, 0.08);
   --radius-lg:    20px;
   --radius-md:    12px;
   --radius-sm:    8px;
   --font:         'Outfit', 'Inter', system-ui, sans-serif;
   --header-h:     64px;
+}
+
+.themeDark {
+  --bg:           #1a1a2e;
+  --board:        #16213e;
+  --text:         #ffffff;
+  --text-muted:   #8892b0;
+  --surface:      rgba(255, 255, 255, 0.04);
+  --border:       rgba(255, 255, 255, 0.08);
+  --canvas-bg:    radial-gradient(ellipse at center, #1e2746 0%, #0f1220 100%);
+}
+
+.themeLight {
+  --bg:           #f0f2f5;
+  --board:        #ffffff;
+  --text:         #1a1a2e;
+  --text-muted:   #64748b;
+  --surface:      rgba(0, 0, 0, 0.04);
+  --border:       rgba(0, 0, 0, 0.08);
+  --canvas-bg:    radial-gradient(ellipse at center, #e2e8f0 0%, #cbd5e1 100%);
 }
 
 /* ── Global reset (scoped to component root) ────────────────── */
@@ -40,13 +54,12 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   padding: 0 24px;
-  background: rgba(22, 33, 62, 0.92);
+  background: var(--board);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   z-index: 50;
-  text-align: center;
 }
 
 .brand h1 {
@@ -54,16 +67,33 @@
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.4px;
+  color: var(--text);
+  line-height: 1;
+}
+
+.themeDark .brand h1 {
   background: linear-gradient(120deg, #fff 30%, var(--accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  line-height: 1;
 }
 
 .tagline {
   font-size: 11px;
   color: var(--text-muted);
   margin: 4px 0 0;
+}
+
+.themeToggle {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .logoPuzzle {
@@ -161,6 +191,8 @@
   font-weight: 600;
   font-size: 15px;
   padding: 0 4px 4px;
+  color: var(--text);
+  text-align: center;
 }
 
 .completedBadge {
@@ -213,7 +245,7 @@
 /* ── Game View Styles ────────────────────────────────────────── */
 .gameHeader {
   height: var(--header-h);
-  background: #16213e;
+  background: var(--board);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -301,12 +333,16 @@
   height: 100%;
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, #1e2746 0%, #0f1220 100%);
+  background: var(--canvas-bg);
   touch-action: none;
   background-image:
-    radial-gradient(ellipse at center, #1e2746 0%, #0f1220 100%),
-    radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+    var(--canvas-bg),
+    radial-gradient(circle, rgba(128,128,128,0.1) 1px, transparent 1px);
   background-size: 100% 100%, 30px 30px;
+}
+
+.panning {
+  cursor: grabbing;
 }
 
 .guideThumbnail {
@@ -369,7 +405,7 @@
 }
 
 .winCard {
-  background: #16213e;
+  background: var(--board);
   border: 2px solid var(--accent);
   border-radius: var(--radius-lg);
   padding: 32px;

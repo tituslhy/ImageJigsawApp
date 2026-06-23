@@ -125,9 +125,15 @@ export function usePuzzleGame() {
       const { rows, cols } = getGridSize(difficulty);
 
       const { w: canvasW, h: canvasH } = canvasSizeRef.current;
-      // Calculate responsive max dimensions (max 800x600, or 85% of canvas)
-      const maxWidth = Math.min(800, canvasW * 0.85);
-      const maxHeight = Math.min(600, canvasH * 0.85);
+      const isSmallScreen = canvasW < 600 || canvasH < 600;
+
+      // On mobile, we want the board to be smaller relative to the canvas
+      // so there's more room to scatter pieces.
+      const scaleFactor = isSmallScreen ? 0.6 : 0.85;
+
+      // Calculate responsive max dimensions
+      const maxWidth = Math.min(800, canvasW * scaleFactor);
+      const maxHeight = Math.min(600, canvasH * scaleFactor);
 
       const { pieces, boardWidth, boardHeight } = generatePuzzlePieces(img, rows, cols, maxWidth, maxHeight);
 
