@@ -758,7 +758,7 @@ Call `browser_wait_for` for the text `"Cutting pieces"` to disappear (or wait ~1
 Call `browser_evaluate` with this function as the payload (it drags piece (0,1) so it lands at the exact expected offset from piece (0,0), wherever piece (0,0) currently happens to be on the canvas, then reports whether the two pieces merged into one group):
 
 ```js
-() => {
+async () => {
   function getPieces() {
     return Array.from(document.querySelectorAll('img[data-piece-id]')).map((el) => ({
       el,
@@ -773,8 +773,12 @@ Call `browser_evaluate` with this function as the payload (it drags piece (0,1) 
     }));
   }
 
-  function fireMouse(target, type, clientX, clientY) {
+  // 'mousemove'/'mouseup' are continuous-priority events in React 18+, so the
+  // resulting setState commits asynchronously — wait a tick after each
+  // dispatch before relying on updated DOM/dataset values.
+  async function fireMouse(target, type, clientX, clientY) {
     target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX, clientY, button: 0 }));
+    await new Promise((r) => setTimeout(r, 30));
   }
 
   const pieces = getPieces();
@@ -790,9 +794,9 @@ Call `browser_evaluate` with this function as the payload (it drags piece (0,1) 
   const dx = desiredBX - b.x;
   const dy = desiredBY - b.y;
 
-  fireMouse(b.el, 'mousedown', startClientX, startClientY);
-  fireMouse(window, 'mousemove', startClientX + dx, startClientY + dy);
-  fireMouse(window, 'mouseup', startClientX + dx, startClientY + dy);
+  await fireMouse(b.el, 'mousedown', startClientX, startClientY);
+  await fireMouse(window, 'mousemove', startClientX + dx, startClientY + dy);
+  await fireMouse(window, 'mouseup', startClientX + dx, startClientY + dy);
 
   const after = getPieces();
   const aAfter = after.find((p) => p.id === a.id);
@@ -801,7 +805,7 @@ Call `browser_evaluate` with this function as the payload (it drags piece (0,1) 
 }
 ```
 
-Expected: returns `{ sameGroup: true, ... }` with `aGroup === bGroup`.
+Expected: returns `{ sameGroup: true, ... }` with `aGroup === bGroup`. (If you see `sameGroup: false` with positions unchanged from before the drag, the DOM hasn't caught up yet — this script already awaits a settle tick after each dispatched event for that reason; do not remove the awaits.)
 
 Stop the dev server:
 
@@ -983,7 +987,7 @@ for i in $(seq 1 10); do curl -s http://localhost:5174 >/dev/null && break; slee
 `browser_evaluate`:
 
 ```js
-() => {
+async () => {
   function getPieces() {
     return Array.from(document.querySelectorAll('img[data-piece-id]')).map((el) => ({
       el,
@@ -997,22 +1001,26 @@ for i in $(seq 1 10); do curl -s http://localhost:5174 >/dev/null && break; slee
       correctY: Number(el.dataset.correctY)
     }));
   }
-  function fireMouse(target, type, clientX, clientY) {
+  // 'mousemove'/'mouseup' are continuous-priority events in React 18+, so the
+  // resulting setState commits asynchronously — wait a tick after each
+  // dispatch before relying on updated DOM/dataset values.
+  async function fireMouse(target, type, clientX, clientY) {
     target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX, clientY, button: 0 }));
+    await new Promise((r) => setTimeout(r, 30));
   }
-  function dragPieceTo(piece, clientX, clientY) {
+  async function dragPieceTo(piece, clientX, clientY) {
     const rect = piece.el.getBoundingClientRect();
     const startX = rect.left + rect.width / 2;
     const startY = rect.top + rect.height / 2;
-    fireMouse(piece.el, 'mousedown', startX, startY);
-    fireMouse(window, 'mousemove', clientX, clientY);
-    fireMouse(window, 'mouseup', clientX, clientY);
+    await fireMouse(piece.el, 'mousedown', startX, startY);
+    await fireMouse(window, 'mousemove', clientX, clientY);
+    await fireMouse(window, 'mouseup', clientX, clientY);
   }
 
   // 1. Drag piece (0,0) into the canvas's top-left corner, far from center.
   let pieces = getPieces();
   let a = pieces.find((p) => p.row === 0 && p.col === 0);
-  dragPieceTo(a, 90, 90);
+  await dragPieceTo(a, 90, 90);
 
   // 2. Drag piece (0,1) so it lands exactly where it should relative to a's new position.
   pieces = getPieces();
@@ -1025,7 +1033,7 @@ for i in $(seq 1 10); do curl -s http://localhost:5174 >/dev/null && break; slee
   const dy = desiredBY - b.y;
   const bStartX = bRect.left + bRect.width / 2;
   const bStartY = bRect.top + bRect.height / 2;
-  dragPieceTo(b, bStartX + dx, bStartY + dy);
+  await dragPieceTo(b, bStartX + dx, bStartY + dy);
 
   pieces = getPieces();
   a = pieces.find((p) => p.row === 0 && p.col === 0);
@@ -1035,7 +1043,7 @@ for i in $(seq 1 10); do curl -s http://localhost:5174 >/dev/null && break; slee
   // 3. Drag the now-merged cluster (grab piece a) by (200, 150) and confirm both move together.
   const aRectNow = a.el.getBoundingClientRect();
   const beforeAx = a.x, beforeAy = a.y, beforeBx = bAfter.x, beforeBy = bAfter.y;
-  dragPieceTo(a, aRectNow.left + aRectNow.width / 2 + 200, aRectNow.top + aRectNow.height / 2 + 150);
+  await dragPieceTo(a, aRectNow.left + aRectNow.width / 2 + 200, aRectNow.top + aRectNow.height / 2 + 150);
 
   pieces = getPieces();
   const aMoved = pieces.find((p) => p.row === 0 && p.col === 0);
@@ -1057,7 +1065,7 @@ Expected: `{ connectedAwayFromCenter: true, movedTogether: true }`.
 Reload the page first (`browser_navigate` to `http://localhost:5174` again) for a clean 3x3 "easy" puzzle, then `browser_evaluate`:
 
 ```js
-() => {
+async () => {
   function getPieces() {
     return Array.from(document.querySelectorAll('img[data-piece-id]')).map((el) => ({
       el,
@@ -1071,16 +1079,20 @@ Reload the page first (`browser_navigate` to `http://localhost:5174` again) for 
       correctY: Number(el.dataset.correctY)
     }));
   }
-  function fireMouse(target, type, clientX, clientY) {
+  // 'mousemove'/'mouseup' are continuous-priority events in React 18+, so the
+  // resulting setState commits asynchronously — wait a tick after each
+  // dispatch before relying on updated DOM/dataset values.
+  async function fireMouse(target, type, clientX, clientY) {
     target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX, clientY, button: 0 }));
+    await new Promise((r) => setTimeout(r, 30));
   }
-  function dragPieceTo(piece, clientX, clientY) {
+  async function dragPieceTo(piece, clientX, clientY) {
     const rect = piece.el.getBoundingClientRect();
-    fireMouse(piece.el, 'mousedown', rect.left + rect.width / 2, rect.top + rect.height / 2);
-    fireMouse(window, 'mousemove', clientX, clientY);
-    fireMouse(window, 'mouseup', clientX, clientY);
+    await fireMouse(piece.el, 'mousedown', rect.left + rect.width / 2, rect.top + rect.height / 2);
+    await fireMouse(window, 'mousemove', clientX, clientY);
+    await fireMouse(window, 'mouseup', clientX, clientY);
   }
-  function connect(fromRow, fromCol, toRow, toCol) {
+  async function connect(fromRow, fromCol, toRow, toCol) {
     const pieces = getPieces();
     const from = pieces.find((p) => p.row === fromRow && p.col === fromCol);
     const to = pieces.find((p) => p.row === toRow && p.col === toCol);
@@ -1089,12 +1101,12 @@ Reload the page first (`browser_navigate` to `http://localhost:5174` again) for 
     const desiredY = from.y + (to.correctY - from.correctY);
     const dx = desiredX - to.x;
     const dy = desiredY - to.y;
-    dragPieceTo(to, toRect.left + toRect.width / 2 + dx, toRect.top + toRect.height / 2 + dy);
+    await dragPieceTo(to, toRect.left + toRect.width / 2 + dx, toRect.top + toRect.height / 2 + dy);
   }
 
   // Build an L-shape: (0,0)-(0,1) and (0,0)-(1,0), leaving (1,1) separate.
-  connect(0, 0, 0, 1);
-  connect(0, 0, 1, 0);
+  await connect(0, 0, 0, 1);
+  await connect(0, 0, 1, 0);
 
   // Now drop (1,1) into the gap — it has neighbors (0,1) [above] and (1,0) [left],
   // both already in the L-shaped group. Position it relative to (1,0).
@@ -1106,7 +1118,7 @@ Reload the page first (`browser_navigate` to `http://localhost:5174` again) for 
   const desiredY = anchor.y + (target.correctY - anchor.correctY);
   const dx = desiredX - target.x;
   const dy = desiredY - target.y;
-  dragPieceTo(target, targetRect.left + targetRect.width / 2 + dx, targetRect.top + targetRect.height / 2 + dy);
+  await dragPieceTo(target, targetRect.left + targetRect.width / 2 + dx, targetRect.top + targetRect.height / 2 + dy);
 
   const after = getPieces();
   const groupIds = new Set(
@@ -1122,7 +1134,7 @@ Expected: `{ allFourSameGroup: true }`.
 
 - [ ] **Step 4: Verify the puzzle can be fully solved off-center and the win overlay fires**
 
-`browser_navigate` to `http://localhost:5174` for a fresh 3x3 board, then `browser_evaluate` to connect all remaining pairs (reuse the same `connect(fromRow, fromCol, toRow, toCol)` helper from Step 3, called for every grid-adjacent pair: `(0,0)-(0,1)`, `(0,1)-(0,2)`, `(0,0)-(1,0)`, `(1,0)-(1,1)`, `(1,1)-(1,2)`, `(1,0)-(2,0)`, `(2,0)-(2,1)`, `(2,1)-(2,2)`), then check:
+`browser_navigate` to `http://localhost:5174` for a fresh 3x3 board, then `browser_evaluate` with an `async () => { ... }` payload that reuses the same `getPieces`/`fireMouse`/`dragPieceTo`/`connect` helpers from Step 3 (all async, each call `await`ed) to connect every grid-adjacent pair in turn: `await connect(0,0,0,1); await connect(0,1,0,2); await connect(0,0,1,0); await connect(1,0,1,1); await connect(1,1,1,2); await connect(1,0,2,0); await connect(2,0,2,1); await connect(2,1,2,2);`. Then, in a separate `browser_evaluate` call, check:
 
 ```js
 () => document.body.textContent.includes('Puzzle Solved!')
