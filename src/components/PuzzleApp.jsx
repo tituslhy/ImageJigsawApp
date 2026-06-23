@@ -84,6 +84,9 @@ export default function PuzzleApp() {
   const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   const [showPreview, setShowPreview]             = useState(false);
   const [draggingGroupId, setDraggingGroupId]     = useState(null);
+  const [viewOffset, setViewOffset]               = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning]                 = useState(false);
+  const [theme, setTheme]                         = useState(() => localStorage.getItem('puzzleTheme') || 'dark');
   const [completedPuzzles, setCompletedPuzzles]   = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('completedPuzzles') || '[]');
@@ -96,6 +99,12 @@ export default function PuzzleApp() {
   const canvasRef = useRef(null);
 
   // ── Persist completion ─────────────────────────────────────────────────────
+
+  useEffect(() => {
+    localStorage.setItem('puzzleTheme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
 
   useEffect(() => {
     if (isWon && image) {
@@ -143,6 +152,13 @@ export default function PuzzleApp() {
     setCanvasSize(w, h);
   }, [setCanvasSize]);
 
+  // Reset view offset when a new game starts or image changes
+  useEffect(() => {
+    if (view === 'game') {
+      setViewOffset({ x: 0, y: 0 });
+    }
+  }, [view, image]);
+
   useEffect(() => {
     measureCanvas();
     const ro = new ResizeObserver(measureCanvas);
@@ -151,6 +167,44 @@ export default function PuzzleApp() {
   }, [measureCanvas]);
 
   // ── Drag handling ──────────────────────────────────────────────────────────
+
+  /**
+   * Begins panning the background.
+   *
+   * @param {React.SyntheticEvent} e
+   */
+  const handlePanStart = useCallback((e) => {
+    if (draggingGroupId !== null || isWonRef.current) return;
+    // Don't pan if clicking an action button or similar (though they are outside canvasRef)
+
+    const coords = getEventCoords(e);
+    const startX = coords.clientX;
+    const startY = coords.clientY;
+    const startOffset = { ...viewOffset };
+
+    setIsPanning(true);
+
+    const onPanMove = (ev) => {
+      const c = getEventCoords(ev);
+      setViewOffset({
+        x: startOffset.x + (c.clientX - startX),
+        y: startOffset.y + (c.clientY - startY)
+      });
+    };
+
+    const onPanEnd = () => {
+      setIsPanning(false);
+      window.removeEventListener('mousemove', onPanMove);
+      window.removeEventListener('mouseup',   onPanEnd);
+      window.removeEventListener('touchmove', onPanMove);
+      window.removeEventListener('touchend',  onPanEnd);
+    };
+
+    window.addEventListener('mousemove', onPanMove);
+    window.addEventListener('mouseup',   onPanEnd);
+    window.addEventListener('touchmove', onPanMove, { passive: false });
+    window.addEventListener('touchend',  onPanEnd);
+  }, [draggingGroupId, viewOffset]);
 
   /**
    * Begins dragging a piece's whole connected group. Registers stable
@@ -163,6 +217,7 @@ export default function PuzzleApp() {
   const handleDragStart = useCallback((e, piece) => {
     if (isWonRef.current) return;
     if (e.cancelable) e.preventDefault();
+    e.stopPropagation(); // Prevent background panning
 
     const coords = getEventCoords(e);
     const memberStarts = piecesRef.current
@@ -243,14 +298,19 @@ export default function PuzzleApp() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  const containerClass = `${styles.appContainer} ${theme === 'dark' ? styles.themeDark : styles.themeLight}`;
+
   if (view === 'selection') {
     return (
-      <div className={styles.appContainer}>
+      <div className={containerClass}>
         <header className={styles.appHeader}>
           <div className={styles.brand}>
             <h1>JigsawIt <span className={styles.logoPuzzle}>🧩</span></h1>
             <p className={styles.tagline}>Slice any image. Solve the puzzle.</p>
           </div>
+          <button className={styles.themeToggle} onClick={toggleTheme} title="Toggle Theme">
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
         </header>
 
         <main className={styles.selectionLayout}>
@@ -309,7 +369,7 @@ export default function PuzzleApp() {
 
   // Game View
   return (
-    <div className={styles.appContainer}>
+    <div className={containerClass}>
       <header className={styles.gameHeader}>
         <button className={styles.backBtn} onClick={() => setView('selection')}>
           ← Back
@@ -331,6 +391,9 @@ export default function PuzzleApp() {
         </div>
 
         <div className={styles.gameActions}>
+          <button className={styles.actionBtn} onClick={toggleTheme} title="Toggle Theme">
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
           <button
             className={`${styles.actionBtn} ${showPreview ? styles.activeAction : ''}`}
             onClick={() => setShowPreview(!showPreview)}
@@ -350,7 +413,12 @@ export default function PuzzleApp() {
       </div>
 
       <main className={styles.gameLayout}>
-        <section ref={canvasRef} className={styles.playCanvas}>
+        <section
+          ref={canvasRef}
+          className={`${styles.playCanvas} ${isPanning ? styles.panning : ''}`}
+          onMouseDown={handlePanStart}
+          onTouchStart={handlePanStart}
+        >
           {isLoading && (
             <div className={styles.loadingSpinner}>
               <div className={styles.spinner} />
@@ -382,8 +450,8 @@ export default function PuzzleApp() {
                     data-testid={`piece-${piece.id}`}
                     className={`${styles.pieceImage} ${isDragging ? styles.dragging : ''}`}
                     style={{
-                      left:   piece.x - piece.pad,
-                      top:    piece.y - piece.pad,
+                      left:   piece.x - piece.pad + viewOffset.x,
+                      top:    piece.y - piece.pad + viewOffset.y,
                       width:  piece.width,
                       height: piece.height,
                       zIndex: isDragging ? 200 : 10,
