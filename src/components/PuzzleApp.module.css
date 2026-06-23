@@ -28,8 +28,9 @@
   display: flex;
   flex-direction: column;
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  height: auto;
+  overflow: visible;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
@@ -79,6 +80,25 @@
   align-items: center;
 }
 
+.toggleControlsBtn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggleControlsBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .statGroup {
   display: flex;
   flex-direction: column;
@@ -102,7 +122,7 @@
 .gameLayout {
   display: flex;
   flex: 1;
-  overflow: hidden;   /* both children manage their own scroll/overflow */
+  overflow: visible;   /* both children manage their own scroll/overflow */
   min-height: 0;
 }
 
@@ -309,6 +329,7 @@
 /* ── Full-screen Play Canvas ─────────────────────────────────── */
 .playCanvas {
   flex: 1;
+  min-height: 70vh;
   position: relative;      /* pieces are position:absolute inside this */
   overflow: hidden;
   background: radial-gradient(ellipse at 60% 50%, #1e2746 0%, #0f1220 100%);
@@ -516,7 +537,7 @@
 /* ── Mobile portrait (< 768px) ───────────────────────────────── */
 @media (max-width: 767px) {
   :root {
-    --header-h: 56px;
+    --header-h: 48px;
     --sidebar-w: 100%;
   }
 
@@ -533,31 +554,33 @@
   .sidebar {
     width: 100%;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
-    padding: 10px;
+    padding: 8px;
     border-right: none;
     border-bottom: 1px solid var(--border);
     overflow-x: auto;
     overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
   .controlSection {
-    flex: 1 1 160px;
-    min-width: 150px;
+    flex: 0 0 auto;
+    min-width: 140px;
+    padding: 10px;
   }
 
   .playCanvas {
     flex: 1;
-    min-height: 0;
+    min-height: 500px;
   }
 }
 
 /* ── Mobile landscape ────────────────────────────────────────── */
 @media (max-width: 900px) and (orientation: landscape) {
   :root {
-    --header-h: 48px;
-    --sidebar-w: 180px;
+    --header-h: 40px;
+    --sidebar-w: 100%;
   }
 
   .appHeader { padding: 0 16px; }
@@ -566,10 +589,35 @@
   .statsCard { gap: 14px; }
   .statValue { font-size: 14px; }
 
-  .sidebar { padding: 10px 10px; gap: 8px; }
+  .gameLayout {
+    flex-direction: column;
+  }
 
-  .controlSection { padding: 10px; gap: 7px; }
-  .controlSection h3 { font-size: 9px; }
-  .controlBtn { padding: 7px 10px; font-size: 11px; }
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 6px 10px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .controlSection {
+    flex: 0 0 auto;
+    min-width: 120px;
+    padding: 8px;
+    gap: 5px;
+  }
+  .controlSection h3 { font-size: 8px; }
+  .controlBtn { padding: 5px 8px; font-size: 10px; }
   .presetBtn span { font-size: 8px; }
+
+  .playCanvas {
+    flex: 1;
+    min-height: 400px;
+  }
 }

@@ -14,5 +14,6 @@ export default defineConfig({
       include: ['src/**/*.js', 'src/**/*.jsx'],
       exclude: ['src/main.jsx', 'src/setupTests.js'],
     },
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', 'verify_mobile.spec.js'],
   },
 })
