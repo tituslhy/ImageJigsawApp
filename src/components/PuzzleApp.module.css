@@ -19,7 +19,6 @@
   --radius-md:    12px;
   --radius-sm:    8px;
   --font:         'Outfit', 'Inter', system-ui, sans-serif;
-  --sidebar-w:    240px;
   --header-h:     64px;
 }
 
@@ -27,10 +26,8 @@
 .appContainer {
   display: flex;
   flex-direction: column;
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
-  height: auto;
-  overflow: visible;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
@@ -43,16 +40,17 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 0 24px;
   background: rgba(22, 33, 62, 0.92);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   z-index: 50;
+  text-align: center;
 }
 
 .brand h1 {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.4px;
@@ -65,7 +63,7 @@
 .tagline {
   font-size: 11px;
   color: var(--text-muted);
-  margin: 3px 0 0;
+  margin: 4px 0 0;
 }
 
 .logoPuzzle {
@@ -73,320 +71,271 @@
   animation: float 3s ease-in-out infinite;
 }
 
-/* Stats row in the header */
-.statsCard {
-  display: flex;
-  gap: 28px;
-  align-items: center;
-}
-
-.toggleControlsBtn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  padding: 6px 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-
-.toggleControlsBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.statGroup {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.statLabel {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text-muted);
-}
-
-.statValue {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-/* ── Main layout (sidebar + canvas) ─────────────────────────── */
-.gameLayout {
-  display: flex;
+/* ── Selection Layout ────────────────────────────────────────── */
+.selectionLayout {
   flex: 1;
-  overflow: visible;   /* both children manage their own scroll/overflow */
-  min-height: 0;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
 }
 
-/* ── Sidebar ─────────────────────────────────────────────────── */
-.sidebar {
-  width: var(--sidebar-w);
-  flex-shrink: 0;
+.selectionCard {
+  width: 100%;
+  max-width: 800px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 14px;
-  background: rgba(22, 33, 62, 0.6);
-  border-right: 1px solid var(--border);
-  overflow-y: auto;
-  overflow-x: hidden;
+  gap: 32px;
 }
 
-.controlSection {
+.difficultyPicker h3, .imageGallery h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.diffGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.diffBtn {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.controlSection h3 {
-  font-size: 10px;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-}
-
-/* ── Buttons ─────────────────────────────────────────────────── */
-.btnGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.controlBtn {
-  width: 100%;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
   color: var(--text);
-  padding: 9px 12px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
-  text-align: left;
-  transition: background 0.18s, border-color 0.18s;
+  transition: all 0.2s;
 }
 
-.controlBtn:hover {
-  background: rgba(255,255,255,0.08);
-}
-
-.activeBtn {
+.activeDiff {
   background: var(--accent);
   border-color: var(--accent);
-  box-shadow: 0 0 10px var(--accent-glow);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
-.activeBtn:hover {
-  background: var(--accent);
-}
-
-/* ── Preset image grid ───────────────────────────────────────── */
-.presetGrid {
+.galleryGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
 }
 
-.presetBtn {
-  background: rgba(255,255,255,0.03);
+.galleryItem {
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  padding: 5px;
+  border-radius: var(--radius-lg);
+  padding: 10px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  transition: border-color 0.18s, background 0.18s;
+  gap: 12px;
+  transition: transform 0.2s, border-color 0.2s;
 }
 
-.presetBtn:hover {
-  background: rgba(255,255,255,0.07);
+.galleryItem:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-.presetPreviewWrap {
+.galleryThumbWrap {
   width: 100%;
   aspect-ratio: 4/3;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   overflow: hidden;
+  position: relative;
 }
 
-.presetPreviewWrap img {
+.galleryThumbWrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.presetBtn span {
-  font-size: 9px;
+.galleryLabel {
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-  text-align: center;
+  font-size: 15px;
+  padding: 0 4px 4px;
 }
 
-.activePreset {
-  border-color: var(--accent);
-  background: var(--accent-dim);
+.completedBadge {
+  position: absolute;
+  inset: 0;
+  background: rgba(22, 33, 62, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #4ade80;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 1px;
+  border: 2px solid #4ade80;
+  border-radius: var(--radius-md);
+  margin: 8px;
 }
 
-/* ── File upload ─────────────────────────────────────────────── */
-.uploadLabel {
-  display: block;
+.checkIcon {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+.uploadBox {
+  margin-top: 24px;
+  padding: 32px;
+  background: rgba(255,255,255,0.02);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
   text-align: center;
-  background: rgba(255,255,255,0.03);
-  border: 1.5px dashed var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
   color: var(--text-muted);
-  transition: background 0.18s, border-color 0.18s;
 }
 
-.uploadLabel:hover {
-  background: rgba(255,255,255,0.07);
-  border-color: rgba(255,255,255,0.18);
+.uploadAction {
+  display: inline-block;
+  margin-top: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .hiddenInput { display: none; }
 
-/* ── Options / reset ─────────────────────────────────────────── */
-.optionsStack {
+/* ── Game View Styles ────────────────────────────────────────── */
+.gameHeader {
+  height: var(--header-h);
+  background: #16213e;
+  border-bottom: 1px solid var(--border);
   display: flex;
-  flex-direction: column;
-  gap: 7px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 100;
 }
 
-.resetBtn {
-  width: 100%;
-  background: rgba(233,69,96,0.08);
-  border: 1px solid rgba(233,69,96,0.25);
-  border-radius: var(--radius-sm);
-  color: #ff6b88;
-  padding: 9px 12px;
-  font-size: 12px;
+.backBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
   font-weight: 600;
   cursor: pointer;
-  text-align: left;
-  transition: background 0.18s;
+  padding: 8px;
 }
 
-.resetBtn:hover {
-  background: rgba(233,69,96,0.16);
-}
-
-/* ── Progress bar ────────────────────────────────────────────── */
-.progressSection {
-  padding: 0 2px;
-}
-
-.progressLabel {
+.gameStats {
   display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  gap: 20px;
 }
 
-.progressBar {
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statLabel {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.statValue {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.gameActions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionBtn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.activeAction {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.topProgressBar {
   width: 100%;
-  height: 6px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 99px;
-  overflow: hidden;
+  height: 4px;
+  background: rgba(255,255,255,0.05);
 }
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), #ff8fa3);
-  border-radius: 99px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 8px var(--accent-glow);
+  background: var(--accent);
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px var(--accent-glow);
 }
 
-/* ── Full-screen Play Canvas ─────────────────────────────────── */
-.playCanvas {
+.gameLayout {
   flex: 1;
-  min-height: 70vh;
-  position: relative;      /* pieces are position:absolute inside this */
+  position: relative;
   overflow: hidden;
-  background: radial-gradient(ellipse at 60% 50%, #1e2746 0%, #0f1220 100%);
-  touch-action: none;
-  cursor: default;
-
-  /* Subtle dot-grid so users understand this IS a surface */
-  background-image:
-    radial-gradient(ellipse at 60% 50%, #1e2746 0%, #0f1220 100%),
-    radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px);
-  background-size: 100% 100%, 28px 28px;
 }
 
-/* ── Guide thumbnail ──────────────────────────────────────────── */
-/*
- * Optional small reference image shown in a fixed canvas corner via the
- * "Show Guide" toggle. Purely a visual aid — it has no effect on where
- * pieces connect.
- */
+/* ── Play Canvas ─────────────────────────────────────────────── */
+.playCanvas {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #1e2746 0%, #0f1220 100%);
+  touch-action: none;
+  background-image:
+    radial-gradient(ellipse at center, #1e2746 0%, #0f1220 100%),
+    radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 30px 30px;
+}
+
 .guideThumbnail {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 140px;
-  border: 1.5px solid rgba(233, 69, 96, 0.4);
+  top: 12px;
+  right: 12px;
+  width: 120px;
+  border: 2px solid var(--accent);
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
-  overflow: hidden;
-  pointer-events: none;
   z-index: 150;
-  opacity: 0.92;
+  pointer-events: none;
+  opacity: 0.8;
 }
 
-.guideThumbnail img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
+.guideThumbnail img { width: 100%; height: auto; display: block; }
 
-/* ── Puzzle pieces ───────────────────────────────────────────── */
 .pieceImage {
   position: absolute;
   will-change: left, top;
-  filter: drop-shadow(0 3px 8px rgba(0,0,0,0.55));
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
   user-select: none;
-  -webkit-user-drag: none;
-  transition: filter 0.12s ease;
 }
 
 .dragging {
-  filter: drop-shadow(0 14px 28px rgba(0,0,0,0.75));
-  transform: scale(1.04);
-  transition: transform 0.08s ease, filter 0.08s ease;
+  filter: drop-shadow(0 15px 30px rgba(0,0,0,0.7));
   z-index: 200 !important;
 }
 
-/* ── Loading spinner ─────────────────────────────────────────── */
+/* ── Overlays & Spinners ─────────────────────────────────────── */
 .loadingSpinner {
   position: absolute;
   inset: 0;
@@ -394,230 +343,75 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  color: var(--text-muted);
-  font-size: 14px;
+  gap: 12px;
+  background: var(--bg);
+  z-index: 200;
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
-  border: 3px solid rgba(233,69,96,0.15);
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--surface);
   border-top-color: var(--accent);
   border-radius: 50%;
-  animation: spin 0.9s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
-/* ── Error message ───────────────────────────────────────────── */
-.errorMessage {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  color: #ff6b88;
-  text-align: center;
-  padding: 24px;
-}
-
-/* ── Win overlay ─────────────────────────────────────────────── */
 .winOverlay {
   position: absolute;
   inset: 0;
-  background: rgba(15, 18, 32, 0.75);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 18, 32, 0.85);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 300;
-  animation: fadeIn 0.35s ease;
 }
 
 .winCard {
-  background: linear-gradient(145deg, #1c2a52, #141d3a);
-  border: 1px solid rgba(233,69,96,0.5);
-  border-radius: 28px;
-  padding: 40px 36px;
-  max-width: 380px;
-  width: 88%;
+  background: #16213e;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  width: 90%;
+  max-width: 320px;
   text-align: center;
-  box-shadow:
-    0 0 0 1px rgba(233,69,96,0.1),
-    0 24px 64px rgba(0,0,0,0.6),
-    0 0 40px rgba(233,69,96,0.15);
-  animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1);
 }
 
-.winEmoji {
-  font-size: 56px;
-  line-height: 1;
-  margin-bottom: 16px;
-  animation: bounce 0.6s cubic-bezier(0.36,0.07,0.19,0.97) 0.2s both;
-}
-
-.winCard h2 {
-  font-size: 28px;
-  font-weight: 800;
-  margin: 0 0 8px;
-  background: linear-gradient(120deg, #fff, var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.winCard p {
-  color: var(--text-muted);
-  font-size: 14px;
-  margin: 0 0 24px;
-}
-
-.winStats {
-  background: rgba(0,0,0,0.25);
-  border-radius: var(--radius-md);
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 28px;
-}
-
-.winRow {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-}
-
-.winRow span { color: var(--text-muted); }
-.winRow strong { color: var(--text); font-weight: 700; }
+.winEmoji { font-size: 48px; margin-bottom: 12px; }
+.winCard h2 { margin: 0 0 20px; font-size: 24px; }
+.winStats { background: rgba(0,0,0,0.2); border-radius: var(--radius-md); padding: 16px; margin-bottom: 24px; }
+.winRow { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+.winRow:last-child { margin-bottom: 0; }
 
 .playAgainBtn {
-  width: 100%;
   background: var(--accent);
+  color: white;
   border: none;
+  padding: 12px 32px;
   border-radius: var(--radius-md);
-  color: #fff;
-  padding: 14px;
-  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
-  box-shadow: 0 4px 16px var(--accent-glow);
+  width: 100%;
 }
 
-.playAgainBtn:hover  { opacity: 0.88; }
-.playAgainBtn:active { transform: scale(0.97); }
-
-/* ── Keyframe animations ─────────────────────────────────────── */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
+@keyframes spin { to { transform: rotate(360deg); } }
 @keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50%       { transform: translateY(-5px) rotate(5deg); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+/* ── Mobile adjustments ──────────────────────────────────────── */
+@media (max-width: 600px) {
+  :root { --header-h: 56px; }
+  .galleryGrid { grid-template-columns: 1fr; }
+  .gameStats { gap: 12px; }
+  .statValue { font-size: 13px; }
 }
 
-@keyframes slideUp {
-  from { transform: translateY(24px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0);    }
-  30%       { transform: translateY(-18px); }
-  60%       { transform: translateY(-8px);  }
-}
-
-/* ── Mobile portrait (< 768px) ───────────────────────────────── */
-@media (max-width: 767px) {
-  :root {
-    --header-h: 48px;
-    --sidebar-w: 100%;
-  }
-
-  .appHeader { padding: 0 16px; }
-  .brand h1  { font-size: 18px; }
-  .tagline   { display: none; }
-  .statsCard { gap: 16px; }
-  .statValue { font-size: 15px; }
-
-  .gameLayout {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 8px;
-    padding: 8px;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .controlSection {
-    flex: 0 0 auto;
-    min-width: 140px;
-    padding: 10px;
-  }
-
-  .playCanvas {
-    flex: 1;
-    min-height: 500px;
-  }
-}
-
-/* ── Mobile landscape ────────────────────────────────────────── */
-@media (max-width: 900px) and (orientation: landscape) {
-  :root {
-    --header-h: 40px;
-    --sidebar-w: 100%;
-  }
-
-  .appHeader { padding: 0 16px; }
-  .brand h1  { font-size: 17px; }
-  .tagline   { display: none; }
-  .statsCard { gap: 14px; }
-  .statValue { font-size: 14px; }
-
-  .gameLayout {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 8px;
-    padding: 6px 10px;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .controlSection {
-    flex: 0 0 auto;
-    min-width: 120px;
-    padding: 8px;
-    gap: 5px;
-  }
-  .controlSection h3 { font-size: 8px; }
-  .controlBtn { padding: 5px 8px; font-size: 10px; }
-  .presetBtn span { font-size: 8px; }
-
-  .playCanvas {
-    flex: 1;
-    min-height: 400px;
-  }
+@media (orientation: landscape) and (max-height: 500px) {
+  :root { --header-h: 48px; }
+  .selectionLayout { padding: 20px; }
+  .galleryGrid { grid-template-columns: repeat(2, 1fr); }
+  .gameHeader { height: 48px; }
 }

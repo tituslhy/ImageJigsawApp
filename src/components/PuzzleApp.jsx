@@ -79,14 +79,34 @@ export default function PuzzleApp() {
     tryConnect
   } = usePuzzleGame();
 
+  const [view, setView]                           = useState('selection'); // 'selection' | 'game'
   const [selectedImage, setSelectedImage]         = useState(DEFAULT_IMAGES[0].url);
   const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   const [showPreview, setShowPreview]             = useState(false);
-  const [showControls, setShowControls]           = useState(true);
   const [draggingGroupId, setDraggingGroupId]     = useState(null);
+  const [completedPuzzles, setCompletedPuzzles]   = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('completedPuzzles') || '[]');
+    } catch {
+      return [];
+    }
+  });
 
   /** Ref to the full-screen canvas section element. */
   const canvasRef = useRef(null);
+
+  // ── Persist completion ─────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (isWon && image) {
+      setCompletedPuzzles(prev => {
+        if (prev.includes(image)) return prev;
+        const next = [...prev, image];
+        localStorage.setItem('completedPuzzles', JSON.stringify(next));
+        return next;
+      });
+    }
+  }, [isWon, image]);
 
   /**
    * dragInfo holds mutable drag state. A ref avoids stale closures in
@@ -129,15 +149,6 @@ export default function PuzzleApp() {
     if (canvasRef.current) ro.observe(canvasRef.current);
     return () => ro.disconnect();
   }, [measureCanvas]);
-
-  // ── Initial game load ──────────────────────────────────────────────────────
-
-  useEffect(() => {
-    // Small timeout lets the canvas measure itself first.
-    const t = setTimeout(() => startNewGame(selectedImage, selectedDifficulty), 80);
-    return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // ── Drag handling ──────────────────────────────────────────────────────────
 
@@ -212,137 +223,133 @@ export default function PuzzleApp() {
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result;
       if (typeof dataUrl === 'string') {
-        setSelectedImage(dataUrl);
-        startNewGame(dataUrl, selectedDifficulty);
+        handleStartGame(dataUrl);
       }
     };
     reader.readAsDataURL(file);
   };
 
-  const handleDifficultyChange = (diff) => {
-    setSelectedDifficulty(diff);
-    startNewGame(selectedImage, diff);
+  const handleStartGame = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setView('game');
+    // We give a tiny delay so the GameView can mount and the canvas section can be measured.
+    setTimeout(() => startNewGame(imageUrl, selectedDifficulty), 50);
   };
 
   const handleReset = () => startNewGame(selectedImage, selectedDifficulty);
 
-  const handlePresetSelect = (url) => {
-    setSelectedImage(url);
-    startNewGame(url, selectedDifficulty);
-  };
-
   const solvedCount = largestGroupSize(pieces);
+  const progressPercent = pieces.length > 0 ? Math.round((solvedCount / pieces.length) * 100) : 0;
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  if (view === 'selection') {
+    return (
+      <div className={styles.appContainer}>
+        <header className={styles.appHeader}>
+          <div className={styles.brand}>
+            <h1>JigsawIt <span className={styles.logoPuzzle}>🧩</span></h1>
+            <p className={styles.tagline}>Slice any image. Solve the puzzle.</p>
+          </div>
+        </header>
+
+        <main className={styles.selectionLayout}>
+          <section className={styles.selectionCard}>
+            <div className={styles.difficultyPicker}>
+              <h3>Select Difficulty</h3>
+              <div className={styles.diffGrid}>
+                {['easy', 'medium', 'hard'].map((diff) => (
+                  <button
+                    key={diff}
+                    className={`${styles.diffBtn} ${selectedDifficulty === diff ? styles.activeDiff : ''}`}
+                    onClick={() => setSelectedDifficulty(diff)}
+                  >
+                    {diff.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.imageGallery}>
+              <h3>Choose a Puzzle</h3>
+              <div className={styles.galleryGrid}>
+                {DEFAULT_IMAGES.map((img) => (
+                  <button
+                    key={img.url}
+                    className={styles.galleryItem}
+                    onClick={() => handleStartGame(img.url)}
+                  >
+                    <div className={styles.galleryThumbWrap}>
+                      <img src={img.url} alt={img.label} />
+                      {completedPuzzles.includes(img.url) && (
+                        <div className={styles.completedBadge}>
+                          <span className={styles.checkIcon}>✓</span>
+                          <span>COMPLETED</span>
+                        </div>
+                      )}
+                    </div>
+                    <span className={styles.galleryLabel}>{img.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className={styles.uploadBox}>
+                <p>...or use your own photo</p>
+                <label className={styles.uploadAction}>
+                  📁 Upload Image
+                  <input type="file" accept="image/*" onChange={handleFileUpload} className={styles.hiddenInput} />
+                </label>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  // Game View
   return (
     <div className={styles.appContainer}>
-      {/* ── Header ── */}
-      <header className={styles.appHeader}>
-        <div className={styles.brand}>
-          <h1>JigsawIt <span className={styles.logoPuzzle}>🧩</span></h1>
-          <p className={styles.tagline}>Slice any image. Solve the puzzle.</p>
-        </div>
-        <div className={styles.statsCard}>
-          <button
-            className={styles.toggleControlsBtn}
-            onClick={() => setShowControls(!showControls)}
-            title={showControls ? "Hide Controls" : "Show Controls"}
-          >
-            {showControls ? '❌' : '⚙️'}
-          </button>
-          <div className={styles.statGroup}>
-            <span className={styles.statLabel}>⏱️ Time</span>
+      <header className={styles.gameHeader}>
+        <button className={styles.backBtn} onClick={() => setView('selection')}>
+          ← Back
+        </button>
+
+        <div className={styles.gameStats}>
+          <div className={styles.statItem}>
+            <span className={styles.statLabel}>TIME</span>
             <span className={styles.statValue}>{formatTime(timeElapsed)}</span>
           </div>
-          <div className={styles.statGroup}>
-            <span className={styles.statLabel}>🔄 Moves</span>
+          <div className={styles.statItem}>
+            <span className={styles.statLabel}>MOVES</span>
             <span className={styles.statValue}>{movesCount}</span>
           </div>
-          <div className={styles.statGroup}>
-            <span className={styles.statLabel}>🧩 Solved</span>
-            <span className={styles.statValue}>
-              {pieces.length > 0 ? `${solvedCount}/${pieces.length}` : '—'}
-            </span>
+          <div className={styles.statItem}>
+            <span className={styles.statLabel}>PROGRESS</span>
+            <span className={styles.statValue}>{progressPercent}%</span>
           </div>
+        </div>
+
+        <div className={styles.gameActions}>
+          <button
+            className={`${styles.actionBtn} ${showPreview ? styles.activeAction : ''}`}
+            onClick={() => setShowPreview(!showPreview)}
+            title="Toggle Guide"
+          >
+            👁️
+          </button>
+          <button className={styles.actionBtn} onClick={handleReset} title="Restart">
+            🔁
+          </button>
         </div>
       </header>
 
+      {/* Mobile-friendly top progress bar */}
+      <div className={styles.topProgressBar}>
+        <div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
+      </div>
+
       <main className={styles.gameLayout}>
-        {/* ── Sidebar ── */}
-        {showControls && (
-        <aside className={styles.sidebar}>
-          <div className={styles.controlSection}>
-            <h3>Difficulty</h3>
-            <div className={styles.btnGroup}>
-              {['easy', 'medium', 'hard'].map((diff) => (
-                <button
-                  key={diff}
-                  className={`${styles.controlBtn} ${selectedDifficulty === diff ? styles.activeBtn : ''}`}
-                  onClick={() => handleDifficultyChange(diff)}
-                >
-                  {diff === 'easy' ? '🟢' : diff === 'medium' ? '🟡' : '🔴'} {diff.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className={styles.controlSection}>
-            <h3>Image</h3>
-            <div className={styles.presetGrid}>
-              {DEFAULT_IMAGES.map((imgPreset) => (
-                <button
-                  key={imgPreset.url}
-                  className={`${styles.presetBtn} ${selectedImage === imgPreset.url ? styles.activePreset : ''}`}
-                  onClick={() => handlePresetSelect(imgPreset.url)}
-                >
-                  <div className={styles.presetPreviewWrap}>
-                    <img src={imgPreset.url} alt={imgPreset.label} />
-                  </div>
-                  <span>{imgPreset.label}</span>
-                </button>
-              ))}
-            </div>
-            <label className={styles.uploadLabel}>
-              📁 Upload your own
-              <input type="file" accept="image/*" onChange={handleFileUpload} className={styles.hiddenInput} />
-            </label>
-          </div>
-
-          <div className={styles.controlSection}>
-            <h3>Options</h3>
-            <div className={styles.optionsStack}>
-              <button
-                className={`${styles.controlBtn} ${showPreview ? styles.activeBtn : ''}`}
-                onClick={() => setShowPreview((v) => !v)}
-              >
-                👁️ {showPreview ? 'Hide Guide' : 'Show Guide'}
-              </button>
-              <button className={styles.resetBtn} onClick={handleReset}>
-                🔁 Restart
-              </button>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          {pieces.length > 0 && (
-            <div className={styles.progressSection}>
-              <div className={styles.progressLabel}>
-                <span>Progress</span>
-                <span>{Math.round((solvedCount / pieces.length) * 100)}%</span>
-              </div>
-              <div className={styles.progressBar}>
-                <div
-                  className={styles.progressFill}
-                  style={{ width: `${(solvedCount / pieces.length) * 100}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </aside>
-        )}
-
-        {/* ── Full-screen Play Canvas ── */}
         <section ref={canvasRef} className={styles.playCanvas}>
           {isLoading && (
             <div className={styles.loadingSpinner}>
@@ -365,8 +372,6 @@ export default function PuzzleApp() {
                   <img src={image} alt="Reference" />
                 </div>
               )}
-              {/* Pieces — stacking order doesn't matter for correctness;
-                  the dragged group is lifted above everything via z-index. */}
               {pieces.map((piece) => {
                 const isDragging = draggingGroupId !== null && piece.groupId === draggingGroupId;
                 return (
@@ -375,14 +380,6 @@ export default function PuzzleApp() {
                     src={piece.imageData}
                     alt=""
                     data-testid={`piece-${piece.id}`}
-                    data-piece-id={piece.id}
-                    data-row={piece.row}
-                    data-col={piece.col}
-                    data-group-id={piece.groupId}
-                    data-x={piece.x}
-                    data-y={piece.y}
-                    data-correct-x={piece.correctX}
-                    data-correct-y={piece.correctY}
                     className={`${styles.pieceImage} ${isDragging ? styles.dragging : ''}`}
                     style={{
                       left:   piece.x - piece.pad,
@@ -400,17 +397,12 @@ export default function PuzzleApp() {
             </>
           )}
 
-          {/* Win overlay */}
           {isWon && (
             <div className={styles.winOverlay}>
               <div className={styles.winCard}>
                 <div className={styles.winEmoji}>🎉</div>
                 <h2>Puzzle Solved!</h2>
-                <p>You assembled the entire image. Nice work!</p>
                 <div className={styles.winStats}>
-                  <div className={styles.winRow}>
-                    <span>Difficulty</span><strong>{difficulty.toUpperCase()}</strong>
-                  </div>
                   <div className={styles.winRow}>
                     <span>Time</span><strong>{formatTime(timeElapsed)}</strong>
                   </div>
@@ -418,8 +410,8 @@ export default function PuzzleApp() {
                     <span>Moves</span><strong>{movesCount}</strong>
                   </div>
                 </div>
-                <button className={styles.playAgainBtn} onClick={handleReset}>
-                  Play Again 🔄
+                <button className={styles.playAgainBtn} onClick={() => setView('selection')}>
+                  Awesome!
                 </button>
               </div>
             </div>
