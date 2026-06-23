@@ -67,6 +67,7 @@ export default function PuzzleApp() {
   const {
     pieces,
     difficulty,
+    image,
     timeElapsed,
     movesCount,
     isWon,
@@ -349,6 +350,11 @@ export default function PuzzleApp() {
 
           {!isLoading && !error && pieces.length > 0 && (
             <>
+              {showPreview && image && (
+                <div className={styles.guideThumbnail}>
+                  <img src={image} alt="Reference" />
+                </div>
+              )}
               {/* Pieces — stacking order doesn't matter for correctness;
                   the dragged group is lifted above everything via z-index. */}
               {pieces.map((piece) => {
