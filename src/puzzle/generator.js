@@ -149,17 +149,17 @@ function drawJigsawPath(ctx, W, H, edges, depth) {
  * @param {HTMLImageElement} img The loaded source image.
  * @param {number} rows Number of rows.
  * @param {number} cols Number of columns.
+ * @param {number} maxWidth Maximum board width (optional, defaults to 800).
+ * @param {number} maxHeight Maximum board height (optional, defaults to 600).
  * @returns {Object} Slicing result: { pieces, boardWidth, boardHeight }.
  */
-export function generatePuzzlePieces(img, rows, cols) {
-  // 1. Calculate scaled board size inside 800x600
-  const MAX_W = 800;
-  const MAX_H = 600;
+export function generatePuzzlePieces(img, rows, cols, maxWidth = 800, maxHeight = 600) {
+  // 1. Calculate scaled board size inside maxWidth x maxHeight
   let boardWidth = img.width;
   let boardHeight = img.height;
 
-  if (boardWidth > MAX_W || boardHeight > MAX_H) {
-    const scale = Math.min(MAX_W / boardWidth, MAX_H / boardHeight);
+  if (boardWidth > maxWidth || boardHeight > maxHeight) {
+    const scale = Math.min(maxWidth / boardWidth, maxHeight / boardHeight);
     boardWidth = Math.round(boardWidth * scale);
     boardHeight = Math.round(boardHeight * scale);
   }
