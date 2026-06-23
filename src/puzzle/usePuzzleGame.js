@@ -123,9 +123,13 @@ export function usePuzzleGame() {
     try {
       const img = await loadImage(imageUrl);
       const { rows, cols } = getGridSize(difficulty);
-      const { pieces, boardWidth, boardHeight } = generatePuzzlePieces(img, rows, cols);
 
       const { w: canvasW, h: canvasH } = canvasSizeRef.current;
+      // Calculate responsive max dimensions (max 800x600, or 85% of canvas)
+      const maxWidth = Math.min(800, canvasW * 0.85);
+      const maxHeight = Math.min(600, canvasH * 0.85);
+
+      const { pieces, boardWidth, boardHeight } = generatePuzzlePieces(img, rows, cols, maxWidth, maxHeight);
 
       const pieceW = boardWidth / cols;
       const pieceH = boardHeight / rows;

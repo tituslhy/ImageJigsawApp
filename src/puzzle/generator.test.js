@@ -89,6 +89,15 @@ describe('generator.js', () => {
       expect(result.boardHeight).toBe(400);
     });
 
+    it('should use custom max dimensions if provided', () => {
+      mockImg.width = 2000;
+      mockImg.height = 1000;
+      const result = generatePuzzlePieces(mockImg, 2, 2, 400, 300);
+
+      expect(result.boardWidth).toBe(400);
+      expect(result.boardHeight).toBe(200);
+    });
+
     it('should create pieces with correct properties', () => {
       const result = generatePuzzlePieces(mockImg, 2, 2);
       const piece = result.pieces[0];
