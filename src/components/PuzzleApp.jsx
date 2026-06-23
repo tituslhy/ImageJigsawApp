@@ -82,6 +82,7 @@ export default function PuzzleApp() {
   const [selectedImage, setSelectedImage]         = useState(DEFAULT_IMAGES[0].url);
   const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   const [showPreview, setShowPreview]             = useState(false);
+  const [showControls, setShowControls]           = useState(true);
   const [draggingGroupId, setDraggingGroupId]     = useState(null);
 
   /** Ref to the full-screen canvas section element. */
@@ -243,6 +244,13 @@ export default function PuzzleApp() {
           <p className={styles.tagline}>Slice any image. Solve the puzzle.</p>
         </div>
         <div className={styles.statsCard}>
+          <button
+            className={styles.toggleControlsBtn}
+            onClick={() => setShowControls(!showControls)}
+            title={showControls ? "Hide Controls" : "Show Controls"}
+          >
+            {showControls ? '❌' : '⚙️'}
+          </button>
           <div className={styles.statGroup}>
             <span className={styles.statLabel}>⏱️ Time</span>
             <span className={styles.statValue}>{formatTime(timeElapsed)}</span>
@@ -262,6 +270,7 @@ export default function PuzzleApp() {
 
       <main className={styles.gameLayout}>
         {/* ── Sidebar ── */}
+        {showControls && (
         <aside className={styles.sidebar}>
           <div className={styles.controlSection}>
             <h3>Difficulty</h3>
@@ -331,6 +340,7 @@ export default function PuzzleApp() {
             </div>
           )}
         </aside>
+        )}
 
         {/* ── Full-screen Play Canvas ── */}
         <section ref={canvasRef} className={styles.playCanvas}>
