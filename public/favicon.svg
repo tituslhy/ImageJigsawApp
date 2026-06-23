@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Dark background circle -->
+  <circle cx="16" cy="16" r="16" fill="#1a1a2e"/>
+
+  <!-- Jigsaw piece shape centred in the icon -->
+  <!-- Main body of the piece -->
+  <path d="
+    M 8 8
+    L 13 8
+    C 13 8 13 5.5 15 5.5 C 17 5.5 17 8 17 8
+    L 24 8
+    L 24 13
+    C 24 13 26.5 13 26.5 15 C 26.5 17 24 17 24 17
+    L 24 24
+    L 19 24
+    C 19 24 19 26.5 17 26.5 C 15 26.5 15 24 15 24
+    L 8 24
+    L 8 19
+    C 8 19 5.5 19 5.5 17 C 5.5 15 8 15 8 15
+    Z
+  "
+  fill="#e94560"
+  stroke="#ff8fa3"
+  stroke-width="0.6"
+  stroke-linejoin="round"
+  />
+</svg>
