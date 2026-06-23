@@ -1,1 +1,25 @@
+/* Global CSS Reset for JigsawIt */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #1a1a2e;
+  overflow: hidden; /* Avoid standard browser scrollbars on body */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  
+  /* Disable elastic scroll/overscroll effects on mobile browsers */
+  overscroll-behavior: none;
+  
+  /* Disable tap highlight on mobile links/buttons */
+  -webkit-tap-highlight-color: transparent;
+  
+  /* Prevent copy/pasting text selection when dragging pieces */
+  user-select: none;
+  -webkit-user-select: none;
+}
 
+#root {
+  width: 100%;
+  height: 100%;
+}

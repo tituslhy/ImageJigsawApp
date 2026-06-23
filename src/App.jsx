@@ -1,5 +1,7 @@
+import PuzzleApp from './components/PuzzleApp';
+
 function App() {
-  return <div>JigsawIt is loading...</div>
+  return <PuzzleApp />;
 }
 
-export default App
+export default App;
