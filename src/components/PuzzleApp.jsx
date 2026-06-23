@@ -364,6 +364,7 @@ export default function PuzzleApp() {
                     key={piece.id}
                     src={piece.imageData}
                     alt=""
+                    data-testid={`piece-${piece.id}`}
                     data-piece-id={piece.id}
                     data-row={piece.row}
                     data-col={piece.col}
