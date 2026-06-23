@@ -743,15 +743,15 @@ Expected: build succeeds (`vite build` completes, prints output file sizes, exit
 Start the dev server in the background:
 
 ```bash
-npm run dev -- --port 5173 --strictPort &
-for i in $(seq 1 10); do curl -s http://localhost:5173 >/dev/null && break; sleep 1; done
+npm run dev -- --port 5174 --strictPort &
+for i in $(seq 1 10); do curl -s http://localhost:5174 >/dev/null && break; sleep 1; done
 ```
 
 Fetch the Playwright tool schemas (they're deferred until first use):
 
 `ToolSearch` with query `select:mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_wait_for,mcp__plugin_playwright_playwright__browser_evaluate`
 
-Call `browser_navigate` to `http://localhost:5173`.
+Call `browser_navigate` to `http://localhost:5174`.
 
 Call `browser_wait_for` for the text `"Cutting pieces"` to disappear (or wait ~1s — the puzzle loads from a 800x600 `picsum.photos` URL almost immediately).
 
@@ -806,7 +806,7 @@ Expected: returns `{ sameGroup: true, ... }` with `aGroup === bGroup`.
 Stop the dev server:
 
 ```bash
-pkill -f "vite.*--port 5173" || true
+pkill -f "vite.*--port 5174" || true
 ```
 
 - [ ] **Step 7: Commit**
@@ -924,11 +924,11 @@ Expected: build succeeds.
 Start the dev server and wait for it, same as Task 1 Step 6:
 
 ```bash
-npm run dev -- --port 5173 --strictPort &
-for i in $(seq 1 10); do curl -s http://localhost:5173 >/dev/null && break; sleep 1; done
+npm run dev -- --port 5174 --strictPort &
+for i in $(seq 1 10); do curl -s http://localhost:5174 >/dev/null && break; sleep 1; done
 ```
 
-Use the already-loaded Playwright tools: `browser_navigate` to `http://localhost:5173`, then `browser_evaluate`:
+Use the already-loaded Playwright tools: `browser_navigate` to `http://localhost:5174`, then `browser_evaluate`:
 
 ```js
 () => !!document.querySelector('img[alt="Reference"]')
@@ -949,7 +949,7 @@ Expected: `false` (dashed rectangle is gone — note CSS module class names are 
 Stop the dev server:
 
 ```bash
-pkill -f "vite.*--port 5173" || true
+pkill -f "vite.*--port 5174" || true
 ```
 
 - [ ] **Step 6: Commit**
@@ -972,11 +972,11 @@ git commit -m "feat: replace dashed target zone with a corner reference thumbnai
 - [ ] **Step 1: Start the dev server**
 
 ```bash
-npm run dev -- --port 5173 --strictPort &
-for i in $(seq 1 10); do curl -s http://localhost:5173 >/dev/null && break; sleep 1; done
+npm run dev -- --port 5174 --strictPort &
+for i in $(seq 1 10); do curl -s http://localhost:5174 >/dev/null && break; sleep 1; done
 ```
 
-`ToolSearch` for `select:mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_evaluate,mcp__plugin_playwright_playwright__browser_snapshot,mcp__plugin_playwright_playwright__browser_click` if not already loaded, then `browser_navigate` to `http://localhost:5173`.
+`ToolSearch` for `select:mcp__plugin_playwright_playwright__browser_navigate,mcp__plugin_playwright_playwright__browser_evaluate,mcp__plugin_playwright_playwright__browser_snapshot,mcp__plugin_playwright_playwright__browser_click` if not already loaded, then `browser_navigate` to `http://localhost:5174`.
 
 - [ ] **Step 2: Verify connecting two pieces away from the canvas center, and that the cluster then drags as one unit**
 
@@ -1054,7 +1054,7 @@ Expected: `{ connectedAwayFromCenter: true, movedTogether: true }`.
 
 - [ ] **Step 3: Verify a single drop can complete two connections at once (closing a gap between two already-joined neighbors)**
 
-Reload the page first (`browser_navigate` to `http://localhost:5173` again) for a clean 3x3 "easy" puzzle, then `browser_evaluate`:
+Reload the page first (`browser_navigate` to `http://localhost:5174` again) for a clean 3x3 "easy" puzzle, then `browser_evaluate`:
 
 ```js
 () => {
@@ -1122,7 +1122,7 @@ Expected: `{ allFourSameGroup: true }`.
 
 - [ ] **Step 4: Verify the puzzle can be fully solved off-center and the win overlay fires**
 
-`browser_navigate` to `http://localhost:5173` for a fresh 3x3 board, then `browser_evaluate` to connect all remaining pairs (reuse the same `connect(fromRow, fromCol, toRow, toCol)` helper from Step 3, called for every grid-adjacent pair: `(0,0)-(0,1)`, `(0,1)-(0,2)`, `(0,0)-(1,0)`, `(1,0)-(1,1)`, `(1,1)-(1,2)`, `(1,0)-(2,0)`, `(2,0)-(2,1)`, `(2,1)-(2,2)`), then check:
+`browser_navigate` to `http://localhost:5174` for a fresh 3x3 board, then `browser_evaluate` to connect all remaining pairs (reuse the same `connect(fromRow, fromCol, toRow, toCol)` helper from Step 3, called for every grid-adjacent pair: `(0,0)-(0,1)`, `(0,1)-(0,2)`, `(0,0)-(1,0)`, `(1,0)-(1,1)`, `(1,1)-(1,2)`, `(1,0)-(2,0)`, `(2,0)-(2,1)`, `(2,1)-(2,2)`), then check:
 
 ```js
 () => document.body.textContent.includes('Puzzle Solved!')
@@ -1132,7 +1132,7 @@ Expected: `true`.
 
 - [ ] **Step 5: Verify the guide thumbnail toggle (regression check after Task 2)**
 
-`browser_navigate` to `http://localhost:5173`. Use `browser_snapshot` to find the "Show Guide" control, `browser_click` it, then `browser_evaluate`:
+`browser_navigate` to `http://localhost:5174`. Use `browser_snapshot` to find the "Show Guide" control, `browser_click` it, then `browser_evaluate`:
 
 ```js
 () => !!document.querySelector('img[alt="Reference"]')
@@ -1149,7 +1149,7 @@ npm run build
 Expected: build succeeds.
 
 ```bash
-pkill -f "vite.*--port 5173" || true
+pkill -f "vite.*--port 5174" || true
 ```
 
 - [ ] **Step 7: Note on touch input (not scripted)**
