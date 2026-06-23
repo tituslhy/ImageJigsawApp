@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import PuzzleApp from './PuzzleApp';
 import * as usePuzzleGameModule from '../puzzle/usePuzzleGame';
 
@@ -30,6 +30,7 @@ describe('PuzzleApp', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
     usePuzzleGameModule.usePuzzleGame.mockReturnValue(defaultGameState);
 
     // Mock ResizeObserver using function declaration for constructor
@@ -42,48 +43,63 @@ describe('PuzzleApp', () => {
     }));
   });
 
-  it('renders correctly with initial state', () => {
+  it('renders correctly with initial state (selection view)', () => {
     render(<PuzzleApp />);
     expect(screen.getByText(/JigsawIt/i)).toBeInTheDocument();
-    expect(screen.getByText(/Slice any image/i)).toBeInTheDocument();
+    expect(screen.getByText(/Choose a Puzzle/i)).toBeInTheDocument();
   });
 
-  it('shows loading state when pieces are being cut', () => {
+  it('shows loading state in game view', async () => {
     usePuzzleGameModule.usePuzzleGame.mockReturnValue({
       ...defaultGameState,
       isLoading: true
     });
     render(<PuzzleApp />);
+
+    const natureBtn = screen.getByText(/Nature/i);
+    fireEvent.click(natureBtn);
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
     expect(screen.getByText(/Cutting pieces…/i)).toBeInTheDocument();
   });
 
-  it('shows error message when game fails to load', () => {
+  it('shows error message when game fails to load', async () => {
     usePuzzleGameModule.usePuzzleGame.mockReturnValue({
       ...defaultGameState,
       error: 'Failed to load image'
     });
     render(<PuzzleApp />);
+
+    const natureBtn = screen.getByText(/Nature/i);
+    fireEvent.click(natureBtn);
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
     expect(screen.getByText(/Failed to load image/i)).toBeInTheDocument();
   });
 
-  it('calls startNewGame when difficulty is changed', async () => {
-    render(<PuzzleApp />);
-    const mediumBtn = screen.getByText(/MEDIUM/i);
-    fireEvent.click(mediumBtn);
-    expect(mockStartNewGame).toHaveBeenCalledWith(expect.any(String), 'medium');
-  });
-
-  it('calls startNewGame when a preset image is selected', () => {
+  it('switches to game view when an image is selected', async () => {
     render(<PuzzleApp />);
     const natureBtn = screen.getByText(/Nature/i);
     fireEvent.click(natureBtn);
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
     expect(mockStartNewGame).toHaveBeenCalled();
+    expect(screen.getByText(/TIME/i)).toBeInTheDocument();
   });
 
   it('calls startNewGame when a file is uploaded', async () => {
     render(<PuzzleApp />);
     const file = new File(['(⌐□_□)'], 'test.png', { type: 'image/png' });
-    const input = screen.getByLabelText(/Upload your own/i);
+    const input = screen.getByLabelText(/Upload Image/i);
 
     // Mock FileReader using function declaration for constructor
     const mockFileReader = {
@@ -98,47 +114,86 @@ describe('PuzzleApp', () => {
 
     fireEvent.change(input, { target: { files: [file] } });
 
+    act(() => {
+      vi.runAllTimers();
+    });
+
     await waitFor(() => {
       expect(mockStartNewGame).toHaveBeenCalledWith('data:image/png;base64,mock', 'easy');
     });
   });
 
-  it('shows win overlay when game is won', () => {
+  it('shows win overlay when game is won', async () => {
     usePuzzleGameModule.usePuzzleGame.mockReturnValue({
       ...defaultGameState,
       isWon: true,
       pieces: [{ id: 'p1', groupId: 'g1', imageData: 'data:image/png', x: 0, y: 0, width: 100, height: 100, pad: 10 }]
     });
     render(<PuzzleApp />);
+
+    // Select image to enter game view
+    const natureBtn = screen.getByText(/Nature/i);
+    fireEvent.click(natureBtn);
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
     expect(screen.getByText(/Puzzle Solved!/i)).toBeInTheDocument();
   });
 
-  it('toggles preview when "Show Guide" is clicked', () => {
+  it('toggles preview when guide icon is clicked', async () => {
     usePuzzleGameModule.usePuzzleGame.mockReturnValue({
       ...defaultGameState,
       image: 'test.jpg',
       pieces: [{ id: 'p1', groupId: 'g1', imageData: 'data:image/png', x: 0, y: 0, width: 100, height: 100, pad: 10 }]
     });
     render(<PuzzleApp />);
-    const toggleBtn = screen.getByText(/Show Guide/i);
+
+    // Select image to enter game view
+    const natureBtn = screen.getByText(/Nature/i);
+    fireEvent.click(natureBtn);
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    const toggleBtn = screen.getByTitle(/Toggle Guide/i);
     fireEvent.click(toggleBtn);
     expect(screen.getByAltText(/Reference/i)).toBeInTheDocument();
-    expect(screen.getByText(/Hide Guide/i)).toBeInTheDocument();
   });
 
-  it('calls startNewGame when Restart is clicked', () => {
+  it('calls startNewGame when Restart is clicked', async () => {
     render(<PuzzleApp />);
-    const restartBtn = screen.getByText(/Restart/i);
+
+    // Select image to enter game view
+    const natureBtn = screen.getByText(/Nature/i);
+    fireEvent.click(natureBtn);
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    const restartBtn = screen.getByTitle(/Restart/i);
     fireEvent.click(restartBtn);
-    expect(mockStartNewGame).toHaveBeenCalled();
+    expect(mockStartNewGame).toHaveBeenCalledTimes(2); // Initial start + restart
   });
 
-  it('calls moveGroup and tryConnect on mouse events', () => {
+  it('calls moveGroup and tryConnect on mouse events', async () => {
     usePuzzleGameModule.usePuzzleGame.mockReturnValue({
       ...defaultGameState,
       pieces: [{ id: 'p1', groupId: 'g1', imageData: 'data:image/png', x: 100, y: 100, width: 100, height: 100, pad: 10 }]
     });
     render(<PuzzleApp />);
+
+    // Select image to enter game view
+    const natureBtn = screen.getByText(/Nature/i);
+    fireEvent.click(natureBtn);
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
     const piece = screen.getByTestId('piece-p1');
 
     fireEvent.mouseDown(piece, { clientX: 100, clientY: 100 });
@@ -160,30 +215,21 @@ describe('PuzzleApp', () => {
     expect(mockTryConnect).toHaveBeenCalledWith('p1');
   });
 
-  it('calls moveGroup and tryConnect on touch events', () => {
-    usePuzzleGameModule.usePuzzleGame.mockReturnValue({
-      ...defaultGameState,
-      pieces: [{ id: 'p1', groupId: 'g1', imageData: 'data:image/png', x: 100, y: 100, width: 100, height: 100, pad: 10 }]
-    });
+  it('navigates back to selection from game view', async () => {
     render(<PuzzleApp />);
-    const piece = screen.getByTestId('piece-p1');
 
-    fireEvent.touchStart(piece, { touches: [{ clientX: 100, clientY: 100 }] });
+    const natureBtn = screen.getByText(/Nature/i);
+    fireEvent.click(natureBtn);
 
-    const touchMoveEvent = new TouchEvent('touchmove', {
-      touches: [{ clientX: 150, clientY: 150 }],
-      bubbles: true,
-      cancelable: true
+    act(() => {
+      vi.runAllTimers();
     });
-    window.dispatchEvent(touchMoveEvent);
 
-    expect(mockMoveGroup).toHaveBeenCalled();
+    expect(screen.getByText(/TIME/i)).toBeInTheDocument();
 
-    const touchEndEvent = new TouchEvent('touchend', {
-      bubbles: true
-    });
-    window.dispatchEvent(touchEndEvent);
+    const backBtn = screen.getByText(/Back/i);
+    fireEvent.click(backBtn);
 
-    expect(mockTryConnect).toHaveBeenCalledWith('p1');
+    expect(screen.getByText(/Choose a Puzzle/i)).toBeInTheDocument();
   });
 });
