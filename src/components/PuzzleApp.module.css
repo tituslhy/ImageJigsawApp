@@ -242,6 +242,51 @@
 
 .hiddenInput { display: none; }
 
+.myPuzzlesHeading {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin: 24px 0 16px;
+  text-align: center;
+}
+
+.galleryItem {
+  position: relative;
+}
+
+.galleryItemBody {
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.removePuzzleBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 5;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--border);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 /* ── Game View Styles ────────────────────────────────────────── */
 .gameHeader {
   height: var(--header-h);

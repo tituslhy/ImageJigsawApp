@@ -76,6 +76,38 @@ export function loadImage(url) {
 }
 
 /**
+ * Downscales and re-encodes a data URL as a JPEG, so a full-resolution
+ * phone photo doesn't blow past localStorage's quota when persisted as a
+ * replayable puzzle entry.
+ *
+ * @param {string} dataUrl Source image as a data URL.
+ * @param {number} maxDim Maximum width/height in pixels.
+ * @param {number} quality JPEG quality (0-1).
+ * @returns {Promise<string>} Promise resolving to the resized data URL.
+ */
+export function resizeImageDataUrl(dataUrl, maxDim = 1280, quality = 0.82) {
+  return loadImage(dataUrl).then((img) => {
+    let width = img.width;
+    let height = img.height;
+
+    if (width > maxDim || height > maxDim) {
+      const scale = maxDim / Math.max(width, height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not get 2D context for resizing canvas');
+
+    ctx.drawImage(img, 0, 0, width, height);
+    return canvas.toDataURL('image/jpeg', quality);
+  });
+}
+
+/**
  * Draws a puzzle piece's clipping path using Bezier curves.
  *
  * @param {CanvasRenderingContext2D} ctx The canvas rendering context.

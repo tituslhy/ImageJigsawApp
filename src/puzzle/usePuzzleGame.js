@@ -129,11 +129,21 @@ export function usePuzzleGame() {
 
       // On mobile, we want the board to be smaller relative to the canvas
       // so there's more room to scatter pieces.
-      const scaleFactor = isSmallScreen ? 0.6 : 0.85;
+      const scaleFactor = isSmallScreen ? 0.45 : 0.85;
 
       // Calculate responsive max dimensions
-      const maxWidth = Math.min(800, canvasW * scaleFactor);
-      const maxHeight = Math.min(600, canvasH * scaleFactor);
+      let maxWidth = Math.min(800, canvasW * scaleFactor);
+      let maxHeight = Math.min(600, canvasH * scaleFactor);
+
+      // On phones, also cap the board by piece count so each piece's touch
+      // target stays a comfortable, constant size regardless of difficulty.
+      // Without this, "easy" (few, large pieces) ballooned to take up a huge
+      // fraction of a small screen since it only scaled with canvas size.
+      if (isSmallScreen) {
+        const maxPieceSize = 60;
+        maxWidth = Math.min(maxWidth, maxPieceSize * cols);
+        maxHeight = Math.min(maxHeight, maxPieceSize * rows);
+      }
 
       const { pieces, boardWidth, boardHeight } = generatePuzzlePieces(img, rows, cols, maxWidth, maxHeight);
 
