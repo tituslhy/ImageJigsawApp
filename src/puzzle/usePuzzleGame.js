@@ -151,12 +151,20 @@ export function usePuzzleGame() {
       const pieceH = boardHeight / rows;
       const snapThreshold = Math.min(pieceW, pieceH) * 0.32;
 
-      // Scatter pieces at random positions across the full canvas.
+      // Scatter pieces within a centered zone sized relative to the board,
+      // rather than across the full canvas — on tall mobile screens that
+      // left pieces spread so far apart that most were off-screen and the
+      // player had to pan around just to gather them into view.
+      const scatterW = Math.max(pieceW * 2, Math.min(canvasW, boardWidth * 1.6));
+      const scatterH = Math.max(pieceH * 2, Math.min(canvasH, boardHeight * 1.6));
+      const scatterOffsetX = (canvasW - scatterW) / 2;
+      const scatterOffsetY = (canvasH - scatterH) / 2;
+
       // Each piece starts as its own group of one.
       const shuffledPieces = pieces.map((piece) => ({
         ...piece,
-        x: pieceW * 0.5 + Math.random() * Math.max(1, canvasW - pieceW),
-        y: pieceH * 0.5 + Math.random() * Math.max(1, canvasH - pieceH),
+        x: scatterOffsetX + pieceW * 0.5 + Math.random() * Math.max(1, scatterW - pieceW),
+        y: scatterOffsetY + pieceH * 0.5 + Math.random() * Math.max(1, scatterH - pieceH),
         snapThreshold,
         groupId: piece.id
       }));
