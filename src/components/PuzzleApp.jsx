@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePuzzleGame } from '../puzzle/usePuzzleGame';
+import { resizeImageDataUrl } from '../puzzle/generator';
 import styles from './PuzzleApp.module.css';
 
 const DEFAULT_IMAGES = [
@@ -15,6 +16,9 @@ const DEFAULT_IMAGES = [
   { label: '🏙️ City',    url: 'https://picsum.photos/seed/city/800/600' },
   { label: '🎨 Abstract', url: 'https://picsum.photos/seed/abstract/800/600' }
 ];
+
+/** Cap how many uploaded puzzles we keep so localStorage doesn't fill up. */
+const MAX_STORED_PUZZLES = 10;
 
 /**
  * Format seconds into MM:SS.
@@ -94,11 +98,26 @@ export default function PuzzleApp() {
       return [];
     }
   });
+  const [myPuzzles, setMyPuzzles]                 = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('myPuzzles') || '[]');
+    } catch {
+      return [];
+    }
+  });
 
   /** Ref to the full-screen canvas section element. */
   const canvasRef = useRef(null);
 
-  // ── Persist completion ─────────────────────────────────────────────────────
+  /**
+   * Identity of the puzzle currently in play — the default images use their
+   * own URL as the id, uploaded puzzles get a generated id (see
+   * handleFileUpload) so completion can be tracked even after the stored
+   * thumbnail is later swapped for a compressed copy.
+   */
+  const currentPuzzleIdRef = useRef(null);
+
+  // ── Persist completion / uploads ───────────────────────────────────────────
 
   useEffect(() => {
     localStorage.setItem('puzzleTheme', theme);
@@ -107,15 +126,58 @@ export default function PuzzleApp() {
   const toggleTheme = () => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
 
   useEffect(() => {
-    if (isWon && image) {
+    const id = currentPuzzleIdRef.current;
+    if (isWon && id) {
       setCompletedPuzzles(prev => {
-        if (prev.includes(image)) return prev;
-        const next = [...prev, image];
-        localStorage.setItem('completedPuzzles', JSON.stringify(next));
+        if (prev.includes(id)) return prev;
+        const next = [...prev, id];
+        try {
+          localStorage.setItem('completedPuzzles', JSON.stringify(next));
+        } catch {
+          // Storage full — completion still shows for this session.
+        }
         return next;
       });
     }
-  }, [isWon, image]);
+  }, [isWon]);
+
+  /**
+   * Adds an uploaded puzzle to the persisted "My Puzzles" gallery, trimming
+   * the oldest entries if localStorage's quota is exceeded.
+   *
+   * @param {{id: string, label: string, url: string, createdAt: number}} entry
+   */
+  const addMyPuzzle = useCallback((entry) => {
+    setMyPuzzles(prev => {
+      let next = [entry, ...prev].slice(0, MAX_STORED_PUZZLES);
+      while (next.length > 0) {
+        try {
+          localStorage.setItem('myPuzzles', JSON.stringify(next));
+          return next;
+        } catch {
+          next = next.slice(0, -1);
+        }
+      }
+      return next;
+    });
+  }, []);
+
+  /**
+   * Removes a single uploaded puzzle from the gallery and storage.
+   *
+   * @param {string} id
+   */
+  const removeMyPuzzle = useCallback((id) => {
+    setMyPuzzles(prev => {
+      const next = prev.filter((p) => p.id !== id);
+      try {
+        localStorage.setItem('myPuzzles', JSON.stringify(next));
+      } catch {
+        // Ignore — list is still correct in memory.
+      }
+      return next;
+    });
+  }, []);
 
   /**
    * dragInfo holds mutable drag state. A ref avoids stale closures in
@@ -159,12 +221,18 @@ export default function PuzzleApp() {
     }
   }, [view, image]);
 
+  // canvasRef only exists once the game view is mounted, so this must
+  // re-run on view changes — otherwise the observer attaches to nothing
+  // (it only ever ran once, while still on the selection screen) and
+  // canvasSizeRef stays stuck at its hardcoded desktop-sized default,
+  // making every game compute piece sizes as if running on a wide screen.
   useEffect(() => {
     measureCanvas();
+    if (!canvasRef.current) return;
     const ro = new ResizeObserver(measureCanvas);
-    if (canvasRef.current) ro.observe(canvasRef.current);
+    ro.observe(canvasRef.current);
     return () => ro.disconnect();
-  }, [measureCanvas]);
+  }, [measureCanvas, view]);
 
   // ── Drag handling ──────────────────────────────────────────────────────────
 
@@ -277,14 +345,25 @@ export default function PuzzleApp() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result;
-      if (typeof dataUrl === 'string') {
-        handleStartGame(dataUrl);
-      }
+      if (typeof dataUrl !== 'string') return;
+
+      const id = `up-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const label = file.name.replace(/\.[^/.]+$/, '') || 'My Puzzle';
+
+      handleStartGame(dataUrl, id);
+
+      // Persist a compressed copy in the background — the full-resolution
+      // photo is only used for this play session, the gallery/replay entry
+      // gets a downscaled copy so it doesn't blow past localStorage's quota.
+      resizeImageDataUrl(dataUrl)
+        .then((thumbUrl) => addMyPuzzle({ id, label, url: thumbUrl, createdAt: Date.now() }))
+        .catch(() => addMyPuzzle({ id, label, url: dataUrl, createdAt: Date.now() }));
     };
     reader.readAsDataURL(file);
   };
 
-  const handleStartGame = (imageUrl) => {
+  const handleStartGame = (imageUrl, puzzleId = imageUrl) => {
+    currentPuzzleIdRef.current = puzzleId;
     setSelectedImage(imageUrl);
     setView('game');
     // We give a tiny delay so the GameView can mount and the canvas section can be measured.
@@ -360,6 +439,41 @@ export default function PuzzleApp() {
                   <input type="file" accept="image/*" onChange={handleFileUpload} className={styles.hiddenInput} />
                 </label>
               </div>
+
+              {myPuzzles.length > 0 && (
+                <>
+                  <h3 className={styles.myPuzzlesHeading}>My Puzzles</h3>
+                  <div className={styles.galleryGrid}>
+                    {myPuzzles.map((puzzle) => (
+                      <div key={puzzle.id} className={styles.galleryItem}>
+                        <button
+                          className={styles.removePuzzleBtn}
+                          onClick={() => removeMyPuzzle(puzzle.id)}
+                          title="Remove"
+                          aria-label={`Remove ${puzzle.label}`}
+                        >
+                          ✕
+                        </button>
+                        <button
+                          className={styles.galleryItemBody}
+                          onClick={() => handleStartGame(puzzle.url, puzzle.id)}
+                        >
+                          <div className={styles.galleryThumbWrap}>
+                            <img src={puzzle.url} alt={puzzle.label} />
+                            {completedPuzzles.includes(puzzle.id) && (
+                              <div className={styles.completedBadge}>
+                                <span className={styles.checkIcon}>✓</span>
+                                <span>COMPLETED</span>
+                              </div>
+                            )}
+                          </div>
+                          <span className={styles.galleryLabel}>{puzzle.label}</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </section>
         </main>
