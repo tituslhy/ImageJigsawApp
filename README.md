@@ -2,7 +2,17 @@
 
 A browser-based jigsaw puzzle application. Upload any image, pick a difficulty, and solve the puzzle. Zero backend, pure frontend experience.
 
-![JigsawIt Preview](public/preview.png) *(Note: Placeholder for actual preview image)*
+<table>
+  <tr>
+    <td><img src="images/home.png" alt="App Home" width="100%"/></td>
+    <td><img src="images/game.png" alt="App Game Play" width="100%"/></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Menu & Image Upload</em></td>
+    <td align="center"><em>Active Puzzle Gameplay</em></td>
+  </tr>
+</table>
+
 
 ## 🚀 Features
 
